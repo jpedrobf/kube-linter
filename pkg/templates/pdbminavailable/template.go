@@ -209,14 +209,6 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 	return m
 }
 
-// func matchHPASelectorToDeployment(deployment k8sutil.Object, hpaMap map[string]k8sutil.Object) (k8sutil.Object, bool) {
-// 	hpa := hpaMap[deployment.GetName()]
-// 	if hpa != nil {
-// 		return hpa, true
-// 	}
-// 	return nil, false
-// }
-
 // Function to transform the replica count into the minReplicas count if the deployment has a HPA with a minReplicas set
 func transformReplicaIntoMinReplicas(deployment k8sutil.Object, hpaMap map[string]k8sutil.Object, replicas int32) int32 {
 	hpaLike := hpaMap[deployment.GetName()]
