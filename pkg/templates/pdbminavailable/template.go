@@ -185,7 +185,7 @@ func getIntOrPercentValueSafelyFromString(intOrStr string) (int, bool, error) {
 // Function to get the list of HPA's provided
 func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace string) map[string]k8sutil.Object {
 
-	m := make(map[string]k8sutil.Object)
+	m := make(map[string]k8sutil.Object, len(lintCtx.Objects()))
 
 	for _, obj := range lintCtx.Objects() {
 		// Ensure that only HPA objects are processed
