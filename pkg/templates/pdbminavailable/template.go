@@ -213,7 +213,10 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 func transformReplicaIntoMinReplicas(deployment k8sutil.Object, hpaMap map[string]k8sutil.Object, replicas int32) int32 {
 	hpaLike := hpaMap[deployment.GetName()]
 	hpa, ok := hpaLike.(*autoscalingV2.HorizontalPodAutoscaler)
-	if hpa.Spec.MinReplicas != nil && ok {
+	if !ok {
+		return replicas
+	}
+	if hpa.Spec.MinReplicas != nil {
 		replicas = *hpa.Spec.MinReplicas
 	}
 	return replicas
