@@ -210,9 +210,9 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 // Function to transform the replica count into the minReplicas count if the deployment has a HPA with a minReplicas set
 func transformReplicaIntoMinReplicas(deployment k8sutil.Object, hpaMap map[string]k8sutil.Object, replicas int32) int32 {
 	hpa := hpaMap[deployment.GetName()]
-	replicas, ok := extract.HPAMinReplicas(hpa)
+	hpaMinReplicas, ok := extract.HPAMinReplicas(hpa)
 	if !ok {
 		return replicas
 	}
-	return replicas
+	return hpaMinReplicas
 }
