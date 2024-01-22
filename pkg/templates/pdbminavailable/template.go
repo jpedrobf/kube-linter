@@ -197,9 +197,8 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 			continue
 		}
 		// validate object with HPA versions using the HPAScaleTargetRefName extractor package function and add to map
-		hpaSpecScaleTargetRefName, _ := extract.HPAScaleTargetRefName(obj.K8sObject)
-		hpaSpecScaleTargetRefName = strings.TrimSpace(hpaSpecScaleTargetRefName)
-		if hpaSpecScaleTargetRefName == "" {
+		hpaSpecScaleTargetRefName, ok := extract.HPAScaleTargetRefName(obj.K8sObject)
+		if !ok {
 			continue
 		}
 		m[hpaSpecScaleTargetRefName] = obj.K8sObject
@@ -210,14 +209,10 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 
 // Function to transform the replica count into the minReplicas count if the deployment has a HPA with a minReplicas set
 func transformReplicaIntoMinReplicas(deployment k8sutil.Object, hpaMap map[string]k8sutil.Object, replicas int32) int32 {
-	hpaLike := hpaMap[deployment.GetName()]
-
-	hpa, ok := extract.HPAMinReplicas(hpaLike)
+	hpa := hpaMap[deployment.GetName()]
+	replicas, ok := extract.HPAMinReplicas(hpa)
 	if !ok {
 		return replicas
-	}
-	if hpa > replicas {
-		return hpa
 	}
 	return replicas
 }
