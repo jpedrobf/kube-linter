@@ -15,7 +15,6 @@ import (
 	"golang.stackrox.io/kube-linter/pkg/objectkinds"
 	"golang.stackrox.io/kube-linter/pkg/templates"
 	"golang.stackrox.io/kube-linter/pkg/templates/pdbminavailable/internal/params"
-	autoscalingV2 "k8s.io/api/autoscaling/v2"
 	pdbV1 "k8s.io/api/policy/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -197,13 +196,13 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 		if obj.GetK8sObjectName().Namespace != namespace {
 			continue
 		}
-
-		hpa, ok := obj.K8sObject.(*autoscalingV2.HorizontalPodAutoscaler)
-		if !ok {
+		// validate object with HPA versions using the HPAScaleTargetRefName extractor package function and add to map
+		hpaSpecScaleTargetRefName, _ := extract.HPAScaleTargetRefName(obj.K8sObject)
+		hpaSpecScaleTargetRefName = strings.TrimSpace(hpaSpecScaleTargetRefName)
+		if hpaSpecScaleTargetRefName == "" {
 			continue
 		}
-
-		m[hpa.Spec.ScaleTargetRef.Name] = obj.K8sObject
+		m[hpaSpecScaleTargetRefName] = obj.K8sObject
 	}
 
 	return m
@@ -212,12 +211,13 @@ func getHorizontalPodAutoscalers(lintCtx lintcontext.LintContext, namespace stri
 // Function to transform the replica count into the minReplicas count if the deployment has a HPA with a minReplicas set
 func transformReplicaIntoMinReplicas(deployment k8sutil.Object, hpaMap map[string]k8sutil.Object, replicas int32) int32 {
 	hpaLike := hpaMap[deployment.GetName()]
-	hpa, ok := hpaLike.(*autoscalingV2.HorizontalPodAutoscaler)
+
+	hpa, ok := extract.HPAMinReplicas(hpaLike)
 	if !ok {
 		return replicas
 	}
-	if hpa.Spec.MinReplicas != nil {
-		replicas = *hpa.Spec.MinReplicas
+	if hpa > replicas {
+		return hpa
 	}
 	return replicas
 }
